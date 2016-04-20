@@ -42,62 +42,7 @@ namespace Printer
 			int az = z < 0 ? -z: z;
 			int ae = e < 0 ? -e: e;
 
-			var max = ax > ay ? ax : ay;
 
-			if (ae > 0 && max > 0) 
-			{
-				var fac = (int)Math.Round((ae * 10.0)/max);
-				var mc = (int)Math.Ceiling (max / 10.0); 
-
-
-				if (fac > 0) 
-				{
-					ae = fac * mc;
-					SendCommand (CNCComands.SetFacE, (byte)fac);
-				} 
-				else {
-					SendCommand (CNCComands.SetFacE, (byte)10);
-				}
-			} 
-			else {
-				SendCommand (CNCComands.SetFacE, (byte)10);
-			}
-
-            /*
-			if (ax > 0 && max > 0) 
-			{
-				var fac = (ax * 10)/max; 
-
-
-				if (fac > 0) 
-				{
-					SendCommand (CNCComands.SetFacX, (byte)fac);
-				} 
-				else {
-					SendCommand (CNCComands.SetFacX, (byte)10);
-				}
-			} 
-			else {
-				SendCommand (CNCComands.SetFacX, (byte)10);
-			}
-
-			if (ay > 0 && max > 0) 
-			{
-				var fac = (ay * 10)/max;
-
-
-				if (fac > 0) 
-				{
-					SendCommand (CNCComands.SetFacY, (byte)fac);
-				} 
-				else {
-					SendCommand (CNCComands.SetFacY, (byte)10);
-				}
-			} 
-			else {
-				SendCommand (CNCComands.SetFacY, (byte)10);
-			}
-            */
 			if (ax != 0) 
 			{
 				CNCComands cmd = x < 0 ? CNCComands.SubX : CNCComands.AddX;

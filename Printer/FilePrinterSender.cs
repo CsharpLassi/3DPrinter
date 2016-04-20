@@ -10,7 +10,6 @@ namespace Printer
         public string FileName { get; private set; }
 
         private Stream _fs;
-        private GZipStream _zips;
         private BinaryWriter _bw;
 
         public FilePrinterSender(string filename)
@@ -21,14 +20,12 @@ namespace Printer
         public void Open()
         {
             _fs = File.Open(FileName, FileMode.Create, FileAccess.ReadWrite);
-            _zips = new GZipStream(_fs, CompressionLevel.Optimal);
-            _bw = new BinaryWriter(_zips);
+			_bw = new BinaryWriter(_fs);
         }
 
         public void Close()
         {
             _bw.Close();
-            _zips.Close();
             _fs.Close();
         }
 

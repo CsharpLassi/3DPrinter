@@ -14,14 +14,12 @@ namespace Printer
 
 		public void MoveX(double x)
 		{
-			Context.SendCommand (CNCComands.SetFacX, 10);
 			Context.SendDefaultSpeed ();
 			int mx = (int)(x * Context.XStepsPerMilimeter);
 			Context.SendMoveX (mx);
 		}
 		public void MoveY(double y)
 		{
-			Context.SendCommand (CNCComands.SetFacY, 10);
 			Context.SendDefaultSpeed ();
 			int my = (int)(y * Context.YStepsPerMilimeter);
 			Context.SendMoveY (my);

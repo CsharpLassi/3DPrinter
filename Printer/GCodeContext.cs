@@ -47,48 +47,39 @@ namespace Printer
             ZPosition = 0;
             YPosition = 0;
 
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (var fs = File.Open(path, FileMode.Open, FileAccess.Read))
-                {
-                    fs.CopyTo(ms);
-                }
+			using (MemoryStream ms = new MemoryStream ()) {
+				using (var fs = File.Open (path, FileMode.Open, FileAccess.Read)) {
+					fs.CopyTo (ms);
+				}
 
-                ms.Seek(0, SeekOrigin.Begin);
-
-                using(GZipStream zip = new GZipStream(ms,CompressionMode.Decompress))
-                {
-                    using(BinaryReader br = new BinaryReader(zip))
-                    {
-                        var lastposition = 0;
+				ms.Seek (0, SeekOrigin.Begin);
 
 
-                        try
-                        {
-                            while (true)
-                            {
+				using (BinaryReader br = new BinaryReader (ms)) {
+					var lastposition = 0;
 
-                                var cmd = (CNCComands)br.ReadByte();
-                                var value = br.ReadByte();
 
-                                CNC.SendCommand(cmd, value);
+					try {
+						while (true) {
 
-                                var position = (int)((double)ms.Position / ms.Length * 1000);
-                                if (position > lastposition)
-                                {
-                                    Console.WriteLine("{0} {1}/{2} [{3}%]",DateTime.Now.ToLongTimeString(),ms.Position,ms.Length,position /10.0);
-                                    lastposition = position;
-                                }
+							var cmd = (CNCComands)br.ReadByte ();
+							var value = br.ReadByte ();
 
-                            }
-                        }
-                        catch (Exception ex)
-                        {
+							CNC.SendCommand (cmd, value);
+
+							var position = (int)((double)ms.Position / ms.Length * 1000);
+							if (position > lastposition) {
+								Console.WriteLine ("{0} {1}/{2} [{3}%]", DateTime.Now.ToLongTimeString (), ms.Position, ms.Length, position / 10.0);
+								lastposition = position;
+							}
+
+						}
+					} catch (Exception ex) {
                             
-                        }
-                    }
-                }
-            }
+					}
+				}
+                
+			}
         }
 
         public void EndMove()
@@ -231,53 +222,7 @@ namespace Printer
             var amx = mx < 0 ? -1 * mx : mx;
             var amy = my < 0 ? -1 * my : my;
 
-            if (mx == 0 || my == 0 || amx == amy)
-            {
-                if (!Simulate) 
-                {
-                    CNC.SendXYZE (mx, my, mz, me);
-                }
-            }
-            else
-            {
-                var m = (double)my / mx;
-                var lenght = amx + amy;
-
-                int lastx = 0;
-                int lasty = 0;
-
-                for (int i = 1; i <= amx; i++)
-                {
-                    var nx = (mx < 0 ? -1 * i : i);
-
-                    var ny = (int) (m * nx);
-
-                    if ((ny > lasty && ny > 0) || (ny < lasty && ny < 0) )
-                    {
-                        var dx = nx - lastx;
-                        var dy = ny - lasty + 1;
-
-                        if ((dy +lasty > my && my > 0) || (dy + lasty < my && my < 0))
-                        {
-                            if (my > 0)
-                                dy -= 1;
-                            else if (my < 0)
-                                dy += 1;
-                        }
-
-                        var xe = (int)((double)dx / lenght * me);
-                        var ye = (int)((double)dy / lenght * me);
-
-                        CNC.SendXYZE (dx, 0, 0, xe);
-                        CNC.SendXYZE (0, dy, 0, ye);
-
-                        lastx += dx;
-                        lasty += dy;
-                    }
-                }
-            }
-
-			
+			CNC.SendXYZE (mx, my, mz, me);
 
 			XPosition = ix;
 			YPosition = iy;
