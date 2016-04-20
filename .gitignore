@@ -1,0 +1,6 @@
+#Files
+*.userprefs
+*.swp
+#Dir
+*/obj/*
+*/bin/*

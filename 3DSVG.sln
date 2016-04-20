@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "3DSVG", "3DSVG\3DSVG.csproj", "{5200D624-CE3A-46EB-8268-C684CAAA964E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Printer", "Printer\Printer.csproj", "{B731A252-20F7-42CE-97CE-8697953A3A59}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5200D624-CE3A-46EB-8268-C684CAAA964E}.Debug|x86.ActiveCfg = Debug|x86
+		{5200D624-CE3A-46EB-8268-C684CAAA964E}.Debug|x86.Build.0 = Debug|x86
+		{5200D624-CE3A-46EB-8268-C684CAAA964E}.Release|x86.ActiveCfg = Release|x86
+		{5200D624-CE3A-46EB-8268-C684CAAA964E}.Release|x86.Build.0 = Release|x86
+		{B731A252-20F7-42CE-97CE-8697953A3A59}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B731A252-20F7-42CE-97CE-8697953A3A59}.Debug|x86.Build.0 = Debug|Any CPU
+		{B731A252-20F7-42CE-97CE-8697953A3A59}.Release|x86.ActiveCfg = Release|Any CPU
+		{B731A252-20F7-42CE-97CE-8697953A3A59}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
