@@ -9,6 +9,8 @@
 #define Z_STEP 30
 #define Z_DIR 32
 #define Z_EN 46
+#define Z_HOME A7
+
 
 #define E_STEP 33
 #define E_DIR 35
@@ -60,12 +62,16 @@ void setup() {
   pinMode(Z_STEP,OUTPUT);
   pinMode(Z_DIR,OUTPUT);
   pinMode(Z_EN,OUTPUT);
+  pinMode(Z_HOME,INPUT);
   digitalWrite(Z_EN,HIGH);
 
   pinMode(E_STEP,OUTPUT);
   pinMode(E_DIR,OUTPUT);
   pinMode(E_EN,OUTPUT);
   digitalWrite(Z_EN,HIGH);
+
+  //Timer für die Temperatur
+
 
   Serial.begin(115200);
 
@@ -100,14 +106,13 @@ byte ReadByte()
 
 void loop() 
 {
-
   CheckTemp();
-
+  
   if(startMove)
   {
     switch(mode)
     {
-      case 1:
+      case 1: //Liniear
         mode1();
         break;
     }
@@ -140,6 +145,11 @@ void ParseCommand(byte command, byte value)
     SollposY =0;
     SollposZ =0;
     startMove = true;
+  }
+  else if(command == 3) //SearchHome
+  {
+    searchhome();
+    Serial.write(1);
   }
   else if(command == 8) //Home
   {
@@ -249,39 +259,32 @@ void mode1() //Alles Gleichzeitig
   }
 
   delayMicroseconds(movespeed);
-  //digitalWrite(X_STEP,LOW);
-  //digitalWrite(Y_STEP,LOW);
   digitalWrite(Z_STEP,LOW);
   digitalWrite(E_STEP,LOW);
-  delayMicroseconds(movespeed);
-  
-    /*
-    if(SollposX>IstposX)
-    {
-      digitalWrite(X_DIR,LOW);
-      digitalWrite(X_STEP,HIGH);
-      IstposX++;
-    }
-    else if(SollposX<IstposX)
-    {
-      digitalWrite(X_DIR,HIGH);
-      digitalWrite(X_STEP,HIGH);
-      IstposX--;
-    }
-    
-    if(SollposY>IstposY)
-    {
-      digitalWrite(Y_DIR,LOW);
-      digitalWrite(Y_STEP,HIGH);
-      IstposY++;
-    }
-    else if(SollposY<IstposY)
-    {
-      digitalWrite(Y_DIR,HIGH);
-      digitalWrite(Y_STEP,HIGH);
-      IstposY--;
-    }
-    */    
+  delayMicroseconds(movespeed);   
+}
+
+void searchhome()
+{
+  //Z-Achse
+  digitalWrite(Z_DIR,HIGH);
+  while(digitalRead(Z_HOME) == HIGH)
+  {
+    digitalWrite(Z_STEP,HIGH);
+    delayMicroseconds(movespeed);
+    digitalWrite(Z_STEP,LOW);
+    delayMicroseconds(movespeed); 
+  }
+  delayMicroseconds(1000);
+  while(digitalRead(Z_HOME) == LOW)
+  {
+    digitalWrite(Z_STEP,LOW);
+    delayMicroseconds(movespeed);
+    digitalWrite(Z_STEP,LOW);
+    delayMicroseconds(movespeed); 
+  }
+  SollposZ = 0;
+  IstposZ = 0;
 }
 
 int sgn(int x){
@@ -337,6 +340,10 @@ void bresenham(long sdx, long sdy,long sde)
 /* Pixel berechnen */
    for(t=0; t<el; ++t) /* t zaehlt die Pixel, el ist auch Anzahl */
    {
+      CheckTemp();
+    
+      se = 0;
+    
       /* Aktualisierung Fehlerterm */
       err -= es;
       if(err<0)
@@ -344,20 +351,23 @@ void bresenham(long sdx, long sdy,long sde)
           /* Fehlerterm wieder positiv (>=0) machen */
           err += el;
 
-          sc += abs(ddx) + abs(ddy);
+          sc = (sc + abs(ddx)) %10; 
+          se += sc < facE ? ince : 0;
 
-          se = sc < facE ? ince : 0;
-          sc = sc < 10 ? sc : 0;
-
+          sc = (sc + abs(ddy)) %10; 
+          se += sc < facE ? ince : 0;
+          
+          
           /* Schritt in langsame Richtung, Diagonalschritt */
           movexyz(ddx,ddy,se);
       } 
       else
       {
-          sc += abs(pdx) + abs(pdy);
+          sc = (sc + abs(pdx)) %10; 
+          se += sc < facE ? ince : 0;
 
-          se = sc < facE ? ince : 0;
-          sc = sc < 10 ? sc : 0;
+          sc = (sc + abs(pdy)) %10; 
+          se += sc < facE ? ince : 0;
         
           /* Schritt in schnelle Richtung, Parallelschritt */
           movexyz(pdx,pdy,se);
@@ -398,36 +408,45 @@ void movexyz(long x, long y , long e)
     IstposY--;
   }
 
-  if(e > 0)
-  {
-    digitalWrite(E_DIR,LOW);
-    digitalWrite(E_STEP,HIGH);
-    IstposE++;
-  }
-  else if(e < 0)
-  {
-    digitalWrite(E_DIR,HIGH);
-    digitalWrite(E_STEP,HIGH);
-    IstposE--;
-  }
-
   delayMicroseconds(movespeed);
   digitalWrite(X_STEP,LOW);
   digitalWrite(Y_STEP,LOW);
-  digitalWrite(E_STEP,LOW);
   delayMicroseconds(movespeed);
+
+  while( e != 0)
+  {
+    if(e > 0)
+    {
+      digitalWrite(E_DIR,LOW);
+      digitalWrite(E_STEP,HIGH);
+      IstposE++;
+      e--;
+    }
+    else if(e < 0)
+    {
+      digitalWrite(E_DIR,HIGH);
+      digitalWrite(E_STEP,HIGH);
+      IstposE--;
+      e++;
+    }
+
+    delayMicroseconds(movespeed);
+  digitalWrite(E_STEP,LOW);
+    delayMicroseconds(movespeed);
+  }
+
+  
+  
 }
 
 void CheckTemp()
 {
-
-  static int n = 0;
   
-  int temp = analogRead(TEMPSEN);
+  long temp = analogRead(TEMPSEN);
 
   if( temp < 900)
   {
-    double res = (3000.0)/(1023.0/temp -1);
+    int res = (3000*temp/(1023 -temp));
 
     
     for(byte i = 0; i < TEMPLENGHT; i++)
@@ -446,13 +465,7 @@ void CheckTemp()
    
   if(solltemp > 110 && isttemp < solltemp )
   {
-    if(n % 100 == 0)
-      digitalWrite(HOTPIN,HIGH);
-    else
-    {
-      n++;
-      n%= 100;  
-    }
+    digitalWrite(HOTPIN,HIGH);
   }
   else
     digitalWrite(HOTPIN,LOW);

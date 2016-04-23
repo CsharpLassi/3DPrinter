@@ -7,6 +7,7 @@ namespace Printer
 		None = 0,
 		Start = 1,
 		Home = 2,
+		SearchHome = 3,
 		ChangeMode=8,
 		AddX = 16,
 		SubX = 17,

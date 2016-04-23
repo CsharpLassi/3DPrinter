@@ -204,7 +204,7 @@ namespace Printer
 					var feedpersec = item.Value / 60;
 					var stepspersec = feedpersec * CNC.XStepsPerMilimeter;
 					var stepspermicosec = stepspersec / 1E6;
-					var micosec = 1 / stepspermicosec /2;
+					var micosec = 1 / stepspermicosec / 2;
 					CNC.SendSpeed ((short)micosec);
 					Console.WriteLine ("SetFeedRate:{0}mm/s [{1}]",feedpersec,micosec);
 				}

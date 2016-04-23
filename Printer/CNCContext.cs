@@ -96,7 +96,7 @@ namespace Printer
             Sender.SendByte(value);
 
 
-            if (Sender.CanRead &&( cmd == CNCComands.Start || cmd == CNCComands.Home || cmd == CNCComands.GetTemp) )
+            if (Sender.CanRead &&( cmd == CNCComands.Start || cmd == CNCComands.Home || cmd == CNCComands.GetTemp || cmd == CNCComands.SearchHome) )
             {
                 Sender.ReadByte();
 			}

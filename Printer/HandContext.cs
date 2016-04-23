@@ -59,6 +59,11 @@ namespace Printer
 
             } while (rtemp < temp);
 		}
+
+		public void SearchHome()
+		{
+			Context.SendCommandWithReturn (CNCComands.SearchHome);
+		}
 	}
 }
 

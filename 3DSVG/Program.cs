@@ -102,7 +102,7 @@ namespace DSVG
 			Console.WriteLine ("4)Extruder");
 			Console.WriteLine ("5)SetTemp");
 			Console.WriteLine ("6)GetTemp");
-			Console.WriteLine ("7)CheckTemp");
+			Console.WriteLine ("7)Search Home");
 			int input = 0;
 			do 
 			{
@@ -167,10 +167,7 @@ namespace DSVG
 				}
 				else if (input == 7) 
 				{
-					byte value = 0;
-					Console.Write ("Temp[°C]:");
-					value = byte.Parse(Console.ReadLine());
-					hand.SetCheckTemp(value);
+					hand.SearchHome();
 				}
 
 			} while (input != 0);
