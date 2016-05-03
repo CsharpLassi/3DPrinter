@@ -308,6 +308,7 @@ void bresenham(long sdx, long sdy,long sde)
    long facE = (sde *10) / (abs(sdy) + abs(sdx));
    long se = 0;
    long sc = 0;
+   int tf = 1;
 
    if(sde == 0)
       ince = 0;
@@ -348,12 +349,20 @@ void bresenham(long sdx, long sdy,long sde)
 /* Pixel berechnen */
    for(t=0; t<el; ++t) /* t zaehlt die Pixel, el ist auch Anzahl */
    {
+      tf = 0;
+
+      if(t < 10)
+		tf = 10 - t;
+
+      if(t > el -10)
+		tf = el -t;
+
+
       CheckTemp();
     
       se = 0;
     
       /* Aktualisierung Fehlerterm */
-      err -= es;
       if(err<0)
       {
           /* Fehlerterm wieder positiv (>=0) machen */
@@ -367,7 +376,7 @@ void bresenham(long sdx, long sdy,long sde)
           
           
           /* Schritt in langsame Richtung, Diagonalschritt */
-          movexyz(ddx,ddy,se);
+          movexyz(ddx,ddy,se,tf);
       } 
       else
       {
@@ -378,7 +387,7 @@ void bresenham(long sdx, long sdy,long sde)
           se += sc < facE ? ince : 0;
         
           /* Schritt in schnelle Richtung, Parallelschritt */
-          movexyz(pdx,pdy,se);
+          movexyz(pdx,pdy,se,tf);
       }
    }
 
@@ -388,8 +397,10 @@ void bresenham(long sdx, long sdy,long sde)
 } /* gbham() */
 
 
-void movexyz(long x, long y , long e)
+void movexyz(long x, long y , long e,int tf)
 {
+  if (tf <= 0)
+	tf = 1;
   if(x > 0)
   {
     digitalWrite(X_DIR,LOW);
@@ -416,10 +427,10 @@ void movexyz(long x, long y , long e)
     IstposY--;
   }
 
-  delayMicroseconds(movespeed);
+  delayMicroseconds(movespeed*tf);
   digitalWrite(X_STEP,LOW);
   digitalWrite(Y_STEP,LOW);
-  delayMicroseconds(movespeed);
+  delayMicroseconds(movespeed*tf);
 
   while( e != 0)
   {
@@ -523,3 +534,7 @@ void UnLockMotors()
   digitalWrite(Z_EN,LOW);
   digitalWrite(E_EN,LOW);
 }
+#define X_STEP 22
+#define X_DIR  24
+#define X_EN   44
+
