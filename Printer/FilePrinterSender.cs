@@ -29,9 +29,11 @@ namespace Printer
             _fs.Close();
         }
 
-        public void SendByte(byte sendbyte)
+		public bool SendByte(byte command,byte sendbyte)
         {
+			_bw.Write(command);
             _bw.Write(sendbyte);
+			return true;
         }
         public byte ReadByte()
         {

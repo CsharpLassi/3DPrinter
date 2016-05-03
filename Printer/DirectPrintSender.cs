@@ -14,8 +14,6 @@ namespace Printer
         private BinaryWriter _bw;
         private BinaryReader _br;
 
-        private int bytebuffer = 0;
-
         public DirectPrintSender(string port)
         {
             Port = port;
@@ -55,15 +53,13 @@ namespace Printer
 
         }
 
-        public void SendByte(byte sendbyte)
+		public bool SendByte(byte command,byte sendbyte)
         {
-            if (bytebuffer > 30) {
-                Thread.Sleep (10);
-                bytebuffer = 0;
-            }
-
-            bytebuffer++;
+			_bw.Write(command);
             _bw.Write(sendbyte);
+			var rb = ReadByte ();
+
+			return rb == (byte)CNCResponse.Acknowledgement;
         }
 
         public byte ReadByte()

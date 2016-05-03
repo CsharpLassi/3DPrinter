@@ -19,6 +19,7 @@ namespace Printer
 		SubE = 23,
 		SetTemp=32,
 		GetTemp=33,
+		SetWaitTemp=34,
 		SetDefaultSpeed = 40,
 		SetFirstSpeedByte = 41,
 		SetSecondSpeedByte = 42,

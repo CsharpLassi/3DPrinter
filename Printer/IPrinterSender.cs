@@ -9,7 +9,7 @@ namespace Printer
         void Open();
         void Close();
 
-        void SendByte(byte sendbyte);
+		bool SendByte(byte command,byte sendbyte);
         byte ReadByte();
     }
 }

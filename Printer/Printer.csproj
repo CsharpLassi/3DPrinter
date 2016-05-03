@@ -40,6 +40,7 @@
     <Compile Include="IPrinterSender.cs" />
     <Compile Include="DirectPrintSender.cs" />
     <Compile Include="FilePrinterSender.cs" />
+    <Compile Include="CNCResponse.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -92,13 +92,12 @@ namespace Printer
 
 		public void SendCommand(CNCComands cmd, byte value = 0)
         {
-            Sender.SendByte((byte)cmd);
-            Sender.SendByte(value);
+			Sender.SendByte((byte)cmd,value);
 
 
-            if (Sender.CanRead &&( cmd == CNCComands.Start || cmd == CNCComands.Home || cmd == CNCComands.GetTemp || cmd == CNCComands.SearchHome) )
+            if (Sender.CanRead &&( cmd == CNCComands.Start || cmd == CNCComands.Home || cmd == CNCComands.GetTemp || cmd == CNCComands.SetWaitTemp || cmd == CNCComands.SearchHome) )
             {
-                Sender.ReadByte();
+                var result = Sender.ReadByte();
 			}
 		}
 		public byte SendCommandWithReturn(CNCComands cmd, byte value = 0)
@@ -106,12 +105,19 @@ namespace Printer
             if (!Sender.CanRead)
                 throw new Exception("Sender kann nicht lesen");
 
-            Sender.SendByte((byte)cmd);
-            Sender.SendByte(value);
+			Sender.SendByte((byte)cmd,value);
 
             var result = Sender.ReadByte();
 
 			return result;
+		}
+
+		public void MoveToStartPosition()
+		{
+			SendCommand (CNCComands.SearchHome);
+			var iz = (int)(-1.79 * (ZStepsPerMilimeter));
+			SendMoveZ (iz);
+				
 		}
 
 		public void SendDefaultSpeed()

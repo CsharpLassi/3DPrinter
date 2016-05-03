@@ -121,19 +121,22 @@ namespace Printer
 				case "G21": //Set Milimeter
 					break;
 				case "G28": //Home
+					G28(values);
 					break;
 				case "G90": //Set Absolute position
 					break;
 				case "G92": //Set Position
-					SetPosition(values);
+					G92(values);
 					break;
 				case "M82": //Set extruder to absolute mode 
 					break;
 				case "M84": //Stop idle hold 
 					break;
 				case "M104": // Set Extruder Temperature
+					M104(values);
 					break;
 				case "M109": // Set Extruder Temperature and Wait
+					M109(values);
 					break;
 				case "M106": //Fan on:
 					break;
@@ -146,7 +149,12 @@ namespace Printer
 			}
 		}
 
-		private void SetPosition(List<GCodeValue> values)
+		private void G28(List<GCodeValue> values)
+		{
+			CNC.MoveToStartPosition ();
+		}
+
+		private void G92(List<GCodeValue> values)
 		{
 			foreach (var item in values) 
 			{
@@ -169,6 +177,31 @@ namespace Printer
 				{
 					EPosition = (int)Math.Round(item.Value * CNC.EStepsPerMilimeter);
 					Console.WriteLine ("Set E Position to {0}",EPosition);	
+				}
+			}
+		}
+
+		private void M104(List<GCodeValue> values)
+		{
+			foreach (var value in values) 
+			{
+				if (value.Type == GCodeValueType.ExtruderTemperatur) 
+				{
+					Console.WriteLine ("Set Extruder Temp:{0}°C",value.Value);
+					CNC.SendCommand (CNCComands.SetTemp, (byte)value.Value);
+				}
+			}
+		}
+
+		private void M109(List<GCodeValue> values)
+		{
+			foreach (var value in values) 
+			{
+				if (value.Type == GCodeValueType.ExtruderTemperatur) 
+				{
+					Console.WriteLine ("Set Extruder Temp:{0}°C",value.Value);
+					Console.WriteLine ("Wait");
+					CNC.SendCommand (CNCComands.SetWaitTemp, (byte)value.Value);
 				}
 			}
 		}

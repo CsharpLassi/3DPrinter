@@ -18,7 +18,6 @@
 
 #define HOTPIN 2
 #define TEMPSEN A0
-#define HOTPOWER  255/2
 
 byte mode = 1;
 bool startMove = false;
@@ -33,8 +32,9 @@ long SollposY = 0;
 long SollposZ = 0;
 long SollposE = 0;
 
-byte isttemp   =0;
-byte solltemp  =0;
+int isttemp   =0;
+int solltemp  =0;
+int temppower = 0;
 
 int movespeed = 500;
 
@@ -46,8 +46,8 @@ short tempres[] =   {9044,7760,6684,5778,5011,4243,3806,3333,2926,2577,2275,2015
 void setup() {
 
   pinMode(HOTPIN,OUTPUT);
-  digitalWrite(HOTPIN,LOW);
-  //analogWrite(HOTPIN,0);
+  //digitalWrite(HOTPIN,LOW);
+  analogWrite(HOTPIN,0);
   
   pinMode(X_STEP,OUTPUT);
   pinMode(X_DIR,OUTPUT);
@@ -122,7 +122,7 @@ void loop()
     else
     {
       startMove = false;
-      Serial.write(1);
+      Serial.write('M');
     }
   }
   while(Serial.available() > 0)
@@ -135,6 +135,7 @@ void loop()
 
 void ParseCommand(byte command, byte value)
 {
+  Serial.write('a');
   if(command == 1) //StartMove
   {
     startMove = true;
@@ -149,7 +150,7 @@ void ParseCommand(byte command, byte value)
   else if(command == 3) //SearchHome
   {
     searchhome();
-    Serial.write(1);
+    Serial.write('M');
   }
   else if(command == 8) //Home
   {
@@ -194,6 +195,12 @@ void ParseCommand(byte command, byte value)
   else if (command == 33) //GET TEMP
   {
     Serial.write(isttemp);
+  }
+  else if (command == 34) //SET and WAIT TEMP
+  {
+    solltemp = value;
+    WaitTemp();
+    Serial.write('O');
   }
   else if (command == 40) //SET DefaultMove
   {
@@ -276,9 +283,10 @@ void searchhome()
     delayMicroseconds(movespeed); 
   }
   delayMicroseconds(1000);
+  digitalWrite(Z_DIR,LOW);
   while(digitalRead(Z_HOME) == LOW)
   {
-    digitalWrite(Z_STEP,LOW);
+    digitalWrite(Z_STEP,HIGH);
     delayMicroseconds(movespeed);
     digitalWrite(Z_STEP,LOW);
     delayMicroseconds(movespeed); 
@@ -431,7 +439,7 @@ void movexyz(long x, long y , long e)
     }
 
     delayMicroseconds(movespeed);
-  digitalWrite(E_STEP,LOW);
+    digitalWrite(E_STEP,LOW);
     delayMicroseconds(movespeed);
   }
 
@@ -439,36 +447,65 @@ void movexyz(long x, long y , long e)
   
 }
 
+void WaitTemp()
+{
+  static int count = 0;
+  while(count <5)
+  {
+    CheckTemp();
+    if(isttemp >= solltemp -5 && isttemp <= solltemp +5)
+      count++;
+    else
+      count = 0;
+  }
+}
+
 void CheckTemp()
 {
   
   long temp = analogRead(TEMPSEN);
 
-  if( temp < 900)
+  if( temp < 750)
   {
     int res = (3000*temp/(1023 -temp));
-
+    bool havetemp = false;
     
     for(byte i = 0; i < TEMPLENGHT; i++)
     {
       if(tempres[i] < res)
       {
         isttemp = tempvalues[i];
+        havetemp = true;
         break;
       }
     }
+
+    if(!havetemp)
+      isttemp = tempvalues[TEMPLENGHT-1];
   }
   else
   {
     isttemp = 0;
   }
-   
-  if(solltemp > 110 && isttemp < solltemp )
+
+  int diff = (solltemp - isttemp) << 2;
+
+  temppower += diff;
+
+  int pwmvalue = temppower >> 4;
+
+  if(pwmvalue < 0)
   {
-    digitalWrite(HOTPIN,HIGH);
+    pwmvalue = 0;
+    temppower = 0;
   }
-  else
-    digitalWrite(HOTPIN,LOW);
+  else if(pwmvalue > 255)
+  {
+    pwmvalue = 255;
+    temppower = 255 << 4;
+  }
+
+  analogWrite(HOTPIN,(byte)pwmvalue);
 }
 
 void LockMotors()

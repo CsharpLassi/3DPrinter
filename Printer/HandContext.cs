@@ -48,21 +48,16 @@ namespace Printer
 
 		public void SetCheckTemp(byte temp)
 		{
-            SetTemp ((byte)temp);
-            byte rtemp = 0;
-
-            do 
-            {
-                Thread.Sleep(1000);
-
-                rtemp = GetTemp();
-
-            } while (rtemp < temp);
+			Context.SendCommandWithReturn (CNCComands.SetWaitTemp,temp);
 		}
 
 		public void SearchHome()
 		{
-			Context.SendCommandWithReturn (CNCComands.SearchHome);
+			Context.SendCommandWithReturn(CNCComands.SearchHome);
+		}
+		public void MoveToStart()
+		{
+			Context.MoveToStartPosition ();
 		}
 	}
 }
