@@ -352,10 +352,10 @@ void bresenham(long sdx, long sdy,long sde)
       tf = 0;
 
       if(t < 10)
-		tf = 10 - t;
+		    tf = 10 - t;
 
       if(t > el -10)
-		tf = el -t;
+		    tf =  10- el -t;
 
 
       CheckTemp();
@@ -363,6 +363,7 @@ void bresenham(long sdx, long sdy,long sde)
       se = 0;
     
       /* Aktualisierung Fehlerterm */
+      err -= es;
       if(err<0)
       {
           /* Fehlerterm wieder positiv (>=0) machen */
@@ -400,7 +401,8 @@ void bresenham(long sdx, long sdy,long sde)
 void movexyz(long x, long y , long e,int tf)
 {
   if (tf <= 0)
-	tf = 1;
+	  tf = 1;
+   
   if(x > 0)
   {
     digitalWrite(X_DIR,LOW);
@@ -516,6 +518,9 @@ void CheckTemp()
     temppower = 255 << 4;
   }
 
+  if(isttemp > 215)
+    pwmvalue = 0;
+  
   analogWrite(HOTPIN,(byte)pwmvalue);
 }
 

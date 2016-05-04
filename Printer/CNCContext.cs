@@ -115,7 +115,7 @@ namespace Printer
 		public void MoveToStartPosition()
 		{
 			SendCommand (CNCComands.SearchHome);
-			var iz = (int)(-1.79 * (ZStepsPerMilimeter));
+			var iz = (int)(-1.89 * (ZStepsPerMilimeter));
 			SendMoveZ (iz);
 				
 		}
