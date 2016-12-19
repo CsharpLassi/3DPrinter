@@ -15,6 +15,8 @@ namespace Printer
 
         public IPrinterSender Sender { get; private set; }
 
+        object _lockobject = new object();
+
         public CNCContext(IPrinterSender sender)
         {
             Sender = sender;
@@ -22,7 +24,7 @@ namespace Printer
 			XStepsPerMilimeter = 80; //84;
 			YStepsPerMilimeter = 80; //84;
 			ZStepsPerMilimeter = 4000;
-		 	EStepsPerMilimeter = 615;
+		 	EStepsPerMilimeter = 620;
         }
 
 		public void Open()
@@ -92,30 +94,36 @@ namespace Printer
 
 		public void SendCommand(CNCComands cmd, byte value = 0)
         {
-			Sender.SendByte((byte)cmd,value);
-
-
-            if (Sender.CanRead &&( cmd == CNCComands.Start || cmd == CNCComands.Home || cmd == CNCComands.GetTemp || cmd == CNCComands.SetWaitTemp || cmd == CNCComands.SearchHome) )
+            lock (_lockobject)
             {
-                var result = Sender.ReadByte();
-			}
+                Sender.SendByte((byte)cmd, value);
+
+
+                if (Sender.CanRead && (cmd == CNCComands.Start || cmd == CNCComands.Home || cmd == CNCComands.GetTemp || cmd == CNCComands.SetWaitTemp || cmd == CNCComands.SearchHome))
+                {
+                    var result = Sender.ReadByte();
+                }
+            }
 		}
 		public byte SendCommandWithReturn(CNCComands cmd, byte value = 0)
 		{
-            if (!Sender.CanRead)
-                throw new Exception("Sender kann nicht lesen");
+            lock (_lockobject)
+            {
+                if (!Sender.CanRead)
+                    return 0;
 
-			Sender.SendByte((byte)cmd,value);
+                Sender.SendByte((byte)cmd,value);
 
-            var result = Sender.ReadByte();
+                var result = Sender.ReadByte();
 
-			return result;
+                return result;
+            }
 		}
 
 		public void MoveToStartPosition()
 		{
 			SendCommand (CNCComands.SearchHome);
-			var iz = (int)(-1.89 * (ZStepsPerMilimeter));
+			var iz = (int)( -0.4* (ZStepsPerMilimeter));
 			SendMoveZ (iz);
 				
 		}

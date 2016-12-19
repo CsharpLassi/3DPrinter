@@ -12,6 +12,19 @@ namespace DSVG
     {
         public static void Main(string[] args)
         {
+            
+
+			TerminalWindow window = new TerminalWindow ();
+
+            PrinterModel model = new PrinterModel(window);
+
+            window.Interfaces.Add(new ConnectionInterface(model,window));
+            window.Interfaces.Add(new DirectModeInterface(model, window));
+            window.Interfaces.Add(new FileModeInterface(model, window));
+
+            window.Run();
+
+            /*
 			Console.WriteLine ("Modis");
 			Console.WriteLine ("0)Beenden");
 			Console.WriteLine ("1)GCode-Datei");
@@ -49,9 +62,11 @@ namespace DSVG
 
 			} while (input != 0);
 
-			
+			*/
 
         }
+
+        /*
 
         private static string ReadPort()
         {
@@ -81,7 +96,7 @@ namespace DSVG
             var portname = ReadPort();
 
             Console.WriteLine ("Öffne Port");
-            DirectPrintSender sender = new DirectPrintSender(portname);
+            DirectPrinterSender sender = new DirectPrinterSender(portname);
 
             CNCContext context = new CNCContext(sender);
             context.Open ();
@@ -254,5 +269,7 @@ namespace DSVG
 
 
 		}
+
+        */
     }
 }

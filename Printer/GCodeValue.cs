@@ -21,6 +21,8 @@ namespace Printer
 
 		public static GCodeValue Intepret(string value)
 		{
+            value = value.ToLower();
+
 			var result = new GCodeValue ();
 
 			var fc = value [0];
@@ -32,22 +34,22 @@ namespace Printer
 
 			switch (fc) 
 			{
-			case 'X':
+			case  'x':
 				result.Type = GCodeValueType.XAxis;
 				break;
-			case 'Y':
+			case  'y':
 				result.Type = GCodeValueType.YAxis;
 					break;
-			case 'Z':
+			case  'z':
 				result.Type = GCodeValueType.ZAxis;
 					break;
-			case 'E':
+			case  'e':
 				result.Type = GCodeValueType.ExtruderAxis;
 					break;
-			case 'S':
+			case  's':
 				result.Type = GCodeValueType.ExtruderTemperatur;
 					break;
-			case 'F':
+			case 'f':
 				result.Type = GCodeValueType.FeedRate;
 				break;
 			default:

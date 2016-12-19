@@ -17,9 +17,12 @@ namespace Printer
 
 		public bool Simulate { get; set; }
 
-		public GCodeContext (CNCContext context)
+        public ITextPrinter TextPrinter { get; set; }
+
+		public GCodeContext (CNCContext context, ITextPrinter textprinter)
 		{
 			CNC = context;
+            TextPrinter = textprinter;
 		}
 
 		public void WorkFile(string path)
@@ -39,6 +42,8 @@ namespace Printer
 				}
 
 			}
+
+            EndMove();
 		}
 
         public void CompileWorkFile(string path)
@@ -69,7 +74,7 @@ namespace Printer
 
 							var position = (int)((double)ms.Position / ms.Length * 1000);
 							if (position > lastposition) {
-								Console.WriteLine ("{0} {1}/{2} [{3}%]", DateTime.Now.ToLongTimeString (), ms.Position, ms.Length, position / 10.0);
+                                TextPrinter.WriteLine ("{0} {1}/{2} [{3}%]", DateTime.Now.ToLongTimeString (), ms.Position, ms.Length, position / 10.0);
 								lastposition = position;
 							}
 
@@ -86,8 +91,8 @@ namespace Printer
         {
             if (!Simulate)
             {
-                CNC.SendMoveE((int)(-10 * CNC.EStepsPerMilimeter));
-                CNC.SendMoveZ((int)(10 * CNC.ZStepsPerMilimeter));
+                CNC.SendMoveE((int)(-4 * CNC.EStepsPerMilimeter));
+                CNC.SendMoveZ((int)(20 * CNC.ZStepsPerMilimeter));
                 CNC.SendCommand(CNCComands.SetTemp, 0);
 
             }
@@ -118,6 +123,9 @@ namespace Printer
 				case "G1": // liniear
 					G1(values);
 					break;
+                case "G1R": // liniear relative
+                    G1R(values);
+                    break;
 				case "G21": //Set Milimeter
 					break;
 				case "G28": //Home
@@ -143,7 +151,7 @@ namespace Printer
 				case "M107": //Fan off:
 					break;
 				default:
-					Console.WriteLine ("Unbekanntes Kommando:{0}", cmd);
+                        TextPrinter.WriteLine ("Unbekanntes Kommando:{0}", cmd);
 					break;
 				}
 			}
@@ -151,7 +159,12 @@ namespace Printer
 
 		private void G28(List<GCodeValue> values)
 		{
-			CNC.MoveToStartPosition ();
+			if (values.Count == 0) 
+			{
+                TextPrinter.WriteLine ("Alle Axen auf Homeposition");
+				CNC.MoveToStartPosition ();
+			}	
+
 		}
 
 		private void G92(List<GCodeValue> values)
@@ -161,22 +174,22 @@ namespace Printer
 				if (item.Type == GCodeValueType.XAxis)
 				{
 					XPosition = (int)Math.Round(item.Value * CNC.XStepsPerMilimeter);
-					Console.WriteLine ("Set X Position to {0}",XPosition);	
+                    TextPrinter.WriteLine ("Set X Position to {0}",XPosition);	
 				}
 				else if (item.Type == GCodeValueType.YAxis)
 				{
 					YPosition = (int)Math.Round(item.Value * CNC.YStepsPerMilimeter);
-					Console.WriteLine ("Set Y Position to {0}",YPosition);	
+                    TextPrinter.WriteLine ("Set Y Position to {0}",YPosition);	
 				}
 				else if (item.Type == GCodeValueType.ZAxis)
 				{
 					ZPosition = (int)Math.Round(item.Value * CNC.ZStepsPerMilimeter);
-					Console.WriteLine ("Set Z Position to {0}",ZPosition);	
+                    TextPrinter.WriteLine ("Set Z Position to {0}",ZPosition);	
 				}
 				else if (item.Type == GCodeValueType.ExtruderAxis)
 				{
 					EPosition = (int)Math.Round(item.Value * CNC.EStepsPerMilimeter);
-					Console.WriteLine ("Set E Position to {0}",EPosition);	
+                    TextPrinter.WriteLine ("Set E Position to {0}",EPosition);	
 				}
 			}
 		}
@@ -187,7 +200,7 @@ namespace Printer
 			{
 				if (value.Type == GCodeValueType.ExtruderTemperatur) 
 				{
-					Console.WriteLine ("Set Extruder Temp:{0}°C",value.Value);
+                    TextPrinter.WriteLine ("Set Extruder Temp:{0}°C",value.Value);
 					CNC.SendCommand (CNCComands.SetTemp, (byte)value.Value);
 				}
 			}
@@ -199,8 +212,8 @@ namespace Printer
 			{
 				if (value.Type == GCodeValueType.ExtruderTemperatur) 
 				{
-					Console.WriteLine ("Set Extruder Temp:{0}°C",value.Value);
-					Console.WriteLine ("Wait");
+                    TextPrinter.WriteLine ("Set Extruder Temp:{0}°C",value.Value);
+                    TextPrinter.WriteLine ("Wait");
 					CNC.SendCommand (CNCComands.SetWaitTemp, (byte)value.Value);
 				}
 			}
@@ -237,9 +250,9 @@ namespace Printer
 					var feedpersec = item.Value / 60;
 					var stepspersec = feedpersec * CNC.XStepsPerMilimeter;
 					var stepspermicosec = stepspersec / 1E6;
-					var micosec = 1 / stepspermicosec / 2;
+                    var micosec = (1 / stepspermicosec) *0.25;
 					CNC.SendSpeed ((short)micosec);
-					Console.WriteLine ("SetFeedRate:{0}mm/s [{1}]",feedpersec,micosec);
+                    TextPrinter.WriteLine ("SetFeedRate:{0}mm/s [{1}]",feedpersec,micosec);
 				}
 
 			}
@@ -249,7 +262,7 @@ namespace Printer
 			var mz = iz - ZPosition;
 			var me = ie - EPosition;
 
-			Console.WriteLine ("G1 X{0} Y{1} Z{2} E{3}",mx,my,mz,me);
+            TextPrinter.WriteLine ("G1 X{0} Y{1} Z{2} E{3}",mx,my,mz,me);
 			//Console.WriteLine ("GF1 X{0} Y{1} Z{2}",fx,fy,fz);
 
             var amx = mx < 0 ? -1 * mx : mx;
@@ -262,6 +275,63 @@ namespace Printer
 			ZPosition = iz;
 			EPosition = ie;
 		}
+
+        private void G1R(List<GCodeValue> values)
+        {
+            int ix = 0;
+            int iy = 0;
+            int iz = 0;
+            int ie = 0;
+
+            foreach (var item in values) 
+            {
+
+                if (item.Type == GCodeValueType.XAxis) 
+                {
+                    ix = (int)Math.Round (item.Value * CNC.XStepsPerMilimeter);
+                }   
+                else if (item.Type == GCodeValueType.YAxis) 
+                {
+                    iy = (int)Math.Round (item.Value * CNC.YStepsPerMilimeter);
+                }
+                else if (item.Type == GCodeValueType.ZAxis) 
+                {
+                    iz = (int)Math.Round (item.Value * CNC.ZStepsPerMilimeter);
+                }
+                else if (item.Type == GCodeValueType.ExtruderAxis) 
+                {
+                    ie = (int)Math.Round (item.Value * CNC.EStepsPerMilimeter);
+                }
+                else if (item.Type == GCodeValueType.FeedRate) 
+                {
+                    var feedpersec = item.Value / 60;
+                    var stepspersec = feedpersec * CNC.XStepsPerMilimeter;
+                    var stepspermicosec = stepspersec / 1E6;
+                    var micosec = (1 / stepspermicosec) *0.25;
+                    CNC.SendSpeed ((short)micosec);
+                    TextPrinter.WriteLine ("SetFeedRate:{0}mm/s [{1}]",feedpersec,micosec);
+                }
+
+            }
+
+            var mx = ix;
+            var my = iy ;
+            var mz = iz ;
+            var me = ie;
+
+            TextPrinter.WriteLine ("G1R X{0} Y{1} Z{2} E{3}",mx,my,mz,me);
+            //Console.WriteLine ("GF1 X{0} Y{1} Z{2}",fx,fy,fz);
+
+            var amx = mx < 0 ? -1 * mx : mx;
+            var amy = my < 0 ? -1 * my : my;
+
+            CNC.SendXYZE (mx, my, mz, me);
+
+            XPosition = ix;
+            YPosition = iy;
+            ZPosition = iz;
+            EPosition = ie;
+        }
 	}
 }
 

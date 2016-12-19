@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Printer
 {
-    public class DirectPrintSender : IPrinterSender
+    public class DirectPrinterSender : IPrinterSender
     {
         public string Port { get; set; }
         public bool CanRead {get { return true; }}
@@ -14,7 +14,7 @@ namespace Printer
         private BinaryWriter _bw;
         private BinaryReader _br;
 
-        public DirectPrintSender(string port)
+        public DirectPrinterSender(string port)
         {
             Port = port;
         }

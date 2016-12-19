@@ -38,9 +38,11 @@
     <Compile Include="GCodeValue.cs" />
     <Compile Include="HandContext.cs" />
     <Compile Include="IPrinterSender.cs" />
-    <Compile Include="DirectPrintSender.cs" />
     <Compile Include="FilePrinterSender.cs" />
     <Compile Include="CNCResponse.cs" />
+    <Compile Include="NullPrinterSender.cs" />
+    <Compile Include="DirectPrinterSender.cs" />
+    <Compile Include="ITextPrinter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

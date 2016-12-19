@@ -38,6 +38,14 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TerminalWindow.cs" />
+    <Compile Include="WindowInterface.cs" />
+    <Compile Include="TerminalInterfaces\ConnectionInterface.cs" />
+    <Compile Include="PrinterModel.cs" />
+    <Compile Include="TerminalInterfaces\ActionInterface.cs" />
+    <Compile Include="TerminalInterfaces\BasePrinterInterface.cs" />
+    <Compile Include="TerminalInterfaces\DirectModeInterface.cs" />
+    <Compile Include="TerminalInterfaces\FileModeInterface.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -45,5 +53,8 @@
       <Project>{B731A252-20F7-42CE-97CE-8697953A3A59}</Project>
       <Name>Printer</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TerminalInterfaces\" />
   </ItemGroup>
 </Project>

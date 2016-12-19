@@ -36,7 +36,7 @@ int isttemp   =0;
 int solltemp  =0;
 int temppower = 0;
 
-int movespeed = 500;
+int movespeed = 100;
 
 #define TEMPLENGHT 52
 byte tempvalues[] = {90  ,95  ,100 ,105 ,110 ,115 ,120 ,125 ,130 ,135 ,140 ,145 ,150 ,155 ,160 ,165 ,170 ,175 ,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,215,220,225};
@@ -46,8 +46,8 @@ short tempres[] =   {9044,7760,6684,5778,5011,4243,3806,3333,2926,2577,2275,2015
 void setup() {
 
   pinMode(HOTPIN,OUTPUT);
-  //digitalWrite(HOTPIN,LOW);
-  analogWrite(HOTPIN,0);
+  digitalWrite(HOTPIN,LOW);
+  //analogWrite(HOTPIN,0);
   
   pinMode(X_STEP,OUTPUT);
   pinMode(X_DIR,OUTPUT);
@@ -277,6 +277,7 @@ void searchhome()
   digitalWrite(Z_DIR,HIGH);
   while(digitalRead(Z_HOME) == HIGH)
   {
+    CheckTemp();
     digitalWrite(Z_STEP,HIGH);
     delayMicroseconds(movespeed);
     digitalWrite(Z_STEP,LOW);
@@ -286,6 +287,7 @@ void searchhome()
   digitalWrite(Z_DIR,LOW);
   while(digitalRead(Z_HOME) == LOW)
   {
+    CheckTemp();
     digitalWrite(Z_STEP,HIGH);
     delayMicroseconds(movespeed);
     digitalWrite(Z_STEP,LOW);
@@ -369,11 +371,8 @@ void bresenham(long sdx, long sdy,long sde)
           /* Fehlerterm wieder positiv (>=0) machen */
           err += el;
 
-          sc = (sc + abs(ddx)) %10; 
-          se += sc < facE ? ince : 0;
-
-          sc = (sc + abs(ddy)) %10; 
-          se += sc < facE ? ince : 0;
+          sc = (sc + 1) %10; 
+          se += sc < facE +1 ? ince : 0;
           
           
           /* Schritt in langsame Richtung, Diagonalschritt */
@@ -381,10 +380,7 @@ void bresenham(long sdx, long sdy,long sde)
       } 
       else
       {
-          sc = (sc + abs(pdx)) %10; 
-          se += sc < facE ? ince : 0;
-
-          sc = (sc + abs(pdy)) %10; 
+          sc = (sc + 1) %10; 
           se += sc < facE ? ince : 0;
         
           /* Schritt in schnelle Richtung, Parallelschritt */
@@ -465,6 +461,7 @@ void WaitTemp()
   static int count = 0;
   while(count <5)
   {
+    delay(50);
     CheckTemp();
     if(isttemp >= solltemp -5 && isttemp <= solltemp +5)
       count++;
@@ -475,7 +472,14 @@ void WaitTemp()
 
 void CheckTemp()
 {
-  
+
+  static unsigned long oldmillis = 0;
+  unsigned long currentmillis = millis();
+
+  if(currentmillis - oldmillis < 50) return;
+
+  oldmillis = currentmillis;
+    
   long temp = analogRead(TEMPSEN);
 
   if( temp < 750)
@@ -494,18 +498,26 @@ void CheckTemp()
     }
 
     if(!havetemp)
-      isttemp = tempvalues[TEMPLENGHT-1];
+      isttemp = tempvalues[TEMPLENGHT-1]/2 + isttemp/2 ;
   }
   else
   {
     isttemp = 0;
   }
 
-  int diff = (solltemp - isttemp) << 2;
+  if(isttemp < solltemp)
+    digitalWrite(HOTPIN,1);
+  else
+    digitalWrite(HOTPIN,0);
 
-  temppower += diff;
+  /*
+  int diff = (solltemp - isttemp) >> 1;
 
-  int pwmvalue = temppower >> 4;
+  temppower += diff << 1 ;
+
+  int pivalue = temppower + diff;
+
+  int pwmvalue = pivalue >> 4;
 
   if(pwmvalue < 0)
   {
@@ -522,6 +534,7 @@ void CheckTemp()
     pwmvalue = 0;
   
   analogWrite(HOTPIN,(byte)pwmvalue);
+  */
 }
 
 void LockMotors()
